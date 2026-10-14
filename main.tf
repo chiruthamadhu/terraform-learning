@@ -1,33 +1,24 @@
-name: Terraform CI/CD
+terraform {
+  required_version = ">= 1.4.0"
 
-on:
-  push:
-    branches:
-      - main
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 4.0"
+    }
+  }
+}
 
-jobs:
-  terraform:
-    runs-on: ubuntu-latest
+variable "aws_region" {
+  type    = string
+  default = "us-east-1"
+}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+provider "aws" {
+  region = var.aws_region
+}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        run: terraform plan
+resource "aws_s3_bucket" "example" {
+  bucket = "tf-example-${replace(uuid(), "-", "") }"
+  acl    = "private"
+}
