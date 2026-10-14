@@ -1,13 +1,33 @@
-provider "aws" {
-  region = "ap-south-1" # Change to your desired AWS region
-}
+name: Terraform CI/CD
 
-resource "aws_instance" "web_server" {
-  ami           = "ami-0c82c1a90be4dccc1" # Change to your desired AMI ID
-  instance_type = "t3.micro" # Change to your desired instance type
-  key_name      = "terraform-cicd" # Change to your desired key pair name
+on:
+  push:
+    branches:
+      - main
 
-  tags = {
-    Name = "terraform-cicd-web-server"
-  }
-}
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan
